@@ -81,12 +81,37 @@ function game_over(img) {
                 dangerMode: true,
             }).then(e => {
                 if (e) {
-                    exportCanvasAsPNG('canvas', 'flappyjsbirdResult')
+                    exportCanvasAsPNG('canvas', 'flappyjsbirdResult', true)
+                }
+            }).then(e => {
+                if (e) {
+                    swal(`Your screenshot has been downloaded succesfull. Do you wish to continue game ?`, {
+                        buttons: ["Nope", "Yep!"],
+                    }).then(e => {
+                        if (e) {
+                            location.reload();
+                        }
+                    })
+                } else {
+                    swal(`Do you wish to continue game ?`, {
+                        buttons: ["Nope", "Yep!"],
+                    }).then(e => {
+                        if (e) {
+                            location.reload();
+                        }
+                    })
+                }
+            })
+        } else {
+            swal(`Do you wish to continue game ?`, {
+                buttons: ["Nope", "Yep!"],
+            }).then(e => {
+                if (e) {
+                    location.reload();
                 }
             })
         }
     })
-
     return false
 }
 
