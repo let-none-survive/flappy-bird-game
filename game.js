@@ -1,6 +1,8 @@
 const cvs = document.getElementById("canvas");
 const ctx = cvs.getContext("2d");
 
+let gameOver = false;
+
 const bird = new Image();
 const bg = new Image();
 const fg = new Image();
@@ -21,12 +23,13 @@ score_audio.src = "audio/score.mp3";
 
 const gap = 80;
 
-document.addEventListener('mousedown', moveUp);
 document.addEventListener('keydown', moveUp);
 
 function moveUp() {
-    yPos -= 25;
-    fly.play();
+    if (!gameOver) {
+        yPos -= 25;
+        fly.play();
+    }
 }
 
 let pipes = [];
@@ -40,13 +43,21 @@ let xPos = 10;
 let yPos = 150;
 const grav = 1.5;
 
+
 let score = 0;
 let bestScore = localStorage.getItem('best') || 0;
+
+function game_over() {
+    let coninue = confirm(`Game over! Your score: ${score}. Best score: ${bestScore}.\nWanna try again ?`)
+    if (coninue) location.reload();
+    return false
+}
 
 function draw() {
     ctx.drawImage(bg, 0, 0);
 
     for (let i = 0; i < pipes.length; i++) {
+        
         ctx.drawImage(pipeUp, pipes[i].x, pipes[i].y);
         ctx.drawImage(pipeBottom, pipes[i].x, pipes[i].y + pipeUp.height + gap);
         
@@ -62,7 +73,8 @@ function draw() {
             && xPos <= pipes[i].x + pipeUp.width
             && (yPos <= pipes[i].y + pipeUp.height
             || yPos + bird.height >= pipes[i].y + pipeUp.height + gap) || yPos + bird.height >= cvs.height - fg.height) {
-            location.reload();
+            gameOver = true;
+            game_over();
         }
         if (pipes[i].x == 5) {
             score++;
@@ -73,7 +85,6 @@ function draw() {
             score_audio.play();
         }
     }
-
     ctx.drawImage(fg, 0, cvs.height - fg.height);
     ctx.drawImage(bird, xPos, yPos);
 
@@ -84,6 +95,7 @@ function draw() {
     ctx.fillText(`Score: ${score}`, 10, cvs.height - 20);
     ctx.fillText(`Best: ${bestScore}`, 190, cvs.height - 20);
 
+    if (gameOver) return false;
     requestAnimationFrame(draw)
 }
 
