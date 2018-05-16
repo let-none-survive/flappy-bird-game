@@ -10,10 +10,13 @@ const pipeUp = new Image();
 const pipeBottom = new Image();
 
 bird.src = "img/bird.png";
-bg.src = "img/bg.png"; 
+bg.src = "img/bg.png";
 fg.src = "img/fg.png";
 pipeUp.src = "img/pipeUp.png";
 pipeBottom.src = "img/pipeBottom.png";
+
+fg.style.zIndex = '999 !important';
+pipeBottom.style.zIndex = -1;
 
 const fly = new Audio();
 const score_audio = new Audio();
@@ -47,35 +50,84 @@ const grav = 1.5;
 let score = 0;
 let bestScore = localStorage.getItem('best') || 0;
 
-function game_over() {
-    let coninue = confirm(`Game over! Your score: ${score}. Best score: ${bestScore}.\nWanna try again ?`)
-    if (coninue) location.reload();
+function exportCanvasAsPNG(id, fileName) {
+
+    var canvasElement = document.getElementById(id);
+
+    var MIME_TYPE = "image/png";
+
+    var imgURL = canvasElement.toDataURL(MIME_TYPE);
+
+    var dlLink = document.createElement('a');
+    dlLink.download = fileName;
+    dlLink.href = imgURL;
+    dlLink.dataset.downloadurl = [MIME_TYPE, dlLink.download, dlLink.href].join(':');
+
+    document.body.appendChild(dlLink);
+    dlLink.click();
+    document.body.removeChild(dlLink);
+}
+
+function game_over(img) {
+    swal(`Game over! Your score: ${score}. Best score: ${bestScore}.\nWanna share or download your result?`, {
+        buttons: ["Nope", "Yep!"],
+    }).then(e => {
+        if (e) {
+            swal({
+                title: "Download?",
+                text: "Do you wanna download this screenshot ?",
+                icon: img,
+                buttons: true,
+                dangerMode: true,
+            }).then(e => {
+                if (e) {
+                    exportCanvasAsPNG('canvas', 'flappyjsbirdResult')
+                }
+            })
+        }
+    })
+
     return false
 }
 
 function draw() {
     ctx.drawImage(bg, 0, 0);
 
+    ctx.drawImage(bird, xPos, yPos);
+
+    yPos += grav;
+
+
     for (let i = 0; i < pipes.length; i++) {
-        
+
         ctx.drawImage(pipeUp, pipes[i].x, pipes[i].y);
         ctx.drawImage(pipeBottom, pipes[i].x, pipes[i].y + pipeUp.height + gap);
-        
+        ctx.drawImage(fg, 0, cvs.height - fg.height);
+
+        ctx.fillStyle = '#000';
+        ctx.font = '24px Verdana';
+        ctx.fillText(`Score: ${score}`, 10, cvs.height - 20);
+        ctx.fillText(`Best: ${bestScore}`, 190, cvs.height - 20);
+
         pipes[i].x--;
 
-        if(pipes[i].x == 125) {
+
+        if (pipes[i].x == 125) {
             pipes.push({
-                x : cvs.width,
-                y : Math.floor(Math.random() * pipeUp.height) - pipeUp.height
+                x: cvs.width,
+                y: Math.floor(Math.random() * pipeUp.height) - pipeUp.height
             });
         }
-        if(xPos + bird.width >= pipes[i].x
-            && xPos <= pipes[i].x + pipeUp.width
-            && (yPos <= pipes[i].y + pipeUp.height
-            || yPos + bird.height >= pipes[i].y + pipeUp.height + gap) || yPos + bird.height >= cvs.height - fg.height) {
+
+        if (xPos + bird.width >= pipes[i].x &&
+            xPos <= pipes[i].x + pipeUp.width &&
+            (yPos <= pipes[i].y + pipeUp.height ||
+                yPos + bird.height >= pipes[i].y + pipeUp.height + gap) || yPos + bird.height >= cvs.height - fg.height) {
             gameOver = true;
-            game_over();
+            let image = cvs.toDataURL("image/png");
+            game_over(image);
         }
+
         if (pipes[i].x == 5) {
             score++;
             if (score > bestScore) {
@@ -84,16 +136,8 @@ function draw() {
             }
             score_audio.play();
         }
+
     }
-    ctx.drawImage(fg, 0, cvs.height - fg.height);
-    ctx.drawImage(bird, xPos, yPos);
-
-    yPos += grav;
-
-    ctx.fillStyle = '#000';
-    ctx.font = '24px Verdana';
-    ctx.fillText(`Score: ${score}`, 10, cvs.height - 20);
-    ctx.fillText(`Best: ${bestScore}`, 190, cvs.height - 20);
 
     if (gameOver) return false;
     requestAnimationFrame(draw)
