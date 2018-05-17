@@ -149,8 +149,6 @@ function draw() {
             (yPos <= pipes[i].y + pipeUp.height ||
                 yPos + bird.height >= pipes[i].y + pipeUp.height + gap) || yPos + bird.height >= cvs.height - fg.height) {
             gameOver = true;
-            let image = cvs.toDataURL("image/png");
-            game_over(image);
         }
 
         if (pipes[i].x == 5) {
@@ -161,7 +159,10 @@ function draw() {
             }
             score_audio.play();
         }
-
+        if (gameOver) {
+            let image = cvs.toDataURL("image/png");
+            game_over(image);
+        }
     }
 
     if (gameOver) return false;
